@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#11161d">
+<title>欧陆战争 · 手机版</title>
+<link rel="icon" href="data:,">
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden; background: #11161d; color: #e8eef5;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  }
+  #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+  #hud {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; background: #1b2430; font-size: 13px; gap: 8px;
+  }
+  .side span { color: #ffd24a; font-weight: 700; }
+  #turnInfo { font-weight: 700; font-size: 14px; }
+  #armyInfo { text-align: center; font-size: 12px; color: #9fb2c6; padding: 4px 0; background: #161f29; }
+  #boardWrap { flex: 1; position: relative; overflow: hidden; background: #0e1319; }
+  canvas { display: block; touch-action: none; }
+  #tip { min-height: 20px; padding: 4px 12px; font-size: 12px; color: #9fb2c6; background: #161f29; }
+  #bar {
+    display: flex; gap: 10px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    background: #1b2430;
+  }
+  button {
+    flex: 1; padding: 13px; border-radius: 10px; border: 0; background: #2f6fd0;
+    color: #fff; font-size: 15px; font-weight: 600;
+  }
+  button:disabled { opacity: .45; }
+  .hidden { display: none !important; }
+  #panel {
+    position: fixed; left: 0; right: 0; bottom: 0; background: #161f29; z-index: 20;
+    border-top-left-radius: 14px; border-top-right-radius: 14px;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+    box-shadow: 0 -6px 20px rgba(0,0,0,.45);
+  }
+  .panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; }
+  .panel-head button { flex: 0 0 auto; padding: 6px 14px; font-size: 13px; background: #39485a; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .card {
+    display: flex; flex-direction: column; align-items: flex-start; text-align: left;
+    background: #22303f; padding: 10px; border-radius: 10px; color: #e8eef5;
+  }
+  .card .nm { font-weight: 700; font-size: 15px; }
+  .card .st { font-size: 11px; color: #9fb2c6; margin-top: 3px; line-height: 1.35; }
+  .card .cost { font-size: 12px; color: #ffd24a; margin-top: 6px; }
+  .card.poor { opacity: .45; }
+  #over {
+    position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column;
+    gap: 12px; align-items: center; justify-content: center; background: rgba(6,10,14,.88);
+  }
+  .over-title { font-size: 34px; font-weight: 800; }
+  .over-sub { font-size: 14px; color: #9fb2c6; }
+  #over button { flex: 0 0 auto; padding: 12px 30px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="hud">
+    <div class="side">蓝方 <span id="gold1">200</span> 金</div>
+    <div id="turnInfo">第 1 回合 · 蓝方行动</div>
+    <div class="side">红方 <span id="gold2">200</span> 金</div>
+  </header>
+  <div id="armyInfo">兵力 我 2 : 2 敌</div>
+  <main id="boardWrap"><canvas id="board"></canvas></main>
+  <div id="tip">点击己方部队，再点蓝格移动、红格攻击</div>
+  <footer id="bar">
+    <button id="btnBuy">招募</button>
+    <button id="btnEnd">结束回合</button>
+  </footer>
+</div>
+<div id="panel" class="hidden">
+  <div class="panel-head">
+    <strong>招募部队</strong>
+    <button id="btnClose">关闭</button>
+  </div>
+  <div class="cards">
+    <button class="card" data-type="inf">
+      <span class="nm">步兵</span>
+      <span class="st">攻 42 · 防 30 · 移动 2 · 可占领</span>
+      <span class="cost">60 金</span>
+    </button>
+    <button class="card" data-type="cav">
+      <span class="nm">装甲车</span>
+      <span class="st">攻 55 · 防 35 · 移动 4 · 可占领</span>
+      <span class="cost">90 金</span>
+    </button>
+    <button class="card" data-type="tank">
+      <span class="nm">坦克</span>
+      <span class="st">攻 70 · 防 45 · 移动 3 · 可占领</span>
+      <span class="cost">120 金</span>
+    </button>
+    <button class="card" data-type="arty">
+      <span class="nm">火炮</span>
+      <span class="st">攻 85 · 防 20 · 射程 2 · 不可占领</span>
+      <span class="cost">140 金</span>
+    </button>
+  </div>
+</div>
+
+<div id="over" class="hidden">
+  <div class="over-title">胜利</div>
+  <div class="over-sub">你占领了敌方首都</div>
+  <button id="btnRestart">再来一局</button>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/core.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
