@@ -51,7 +51,7 @@ eu-war-mobile/
     ├── core.test.cjs       规则引擎单元测试 15 项
     ├── soak.cjs            双方 AI 长跑测试
     ├── cdp.cjs             调试协议封装
-    ├── browser.test.cjs    浏览器集成测试 12 项
+    ├── browser.test.cjs    浏览器集成测试 14 项
     ├── shot.cjs            截图脚本
     ├── run-browser.sh      一键浏览器测试
     └── run-shot.sh         一键截图
@@ -62,5 +62,5 @@ eu-war-mobile/
 ```bash
 node tests/core.test.cjs      # 15 项
 node tests/soak.cjs           # 双方 AI 长跑
-bash tests/run-browser.sh     # 12 项
+bash tests/run-browser.sh     # 14 项
 ```

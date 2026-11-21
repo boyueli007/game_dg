@@ -304,7 +304,7 @@ GameCore.findPath = function (state, unit, tc, tr) {
       var terr = GameCore.terrainAt(state, nc, nr);
       if (terr.impassable) continue;
       var occ = GameCore.unitAt(state, nc, nr);
-      if (occ && occ.owner !== unit.owner) continue;
+      if (occ) continue;
       from[k] = GameCore.key(cur.col, cur.row);
       queue.push({ col: nc, row: nr });
     }

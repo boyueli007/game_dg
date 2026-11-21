@@ -69,6 +69,32 @@ const { main, t, sleep, stats } = require('./cdp.cjs');
     "}catch(e){return false;}})()"
   ));
 
+  t('屏幕坐标能反解回原六边形', await run(
+    "(function(){try{" +
+    "var rect=document.getElementById('board').getBoundingClientRect();" +
+    "var pts=[[2,2],[5,6],[8,11]];var ok=0;" +
+    "pts.forEach(function(p){" +
+    "var c=GameUI.center(p[0],p[1]);" +
+    "var h=GameUI.pickHex(c.x+rect.left,c.y+rect.top);" +
+    "if(h&&h.col===p[0]&&h.row===p[1])ok++;" +
+    "});" +
+    "return ok===3;" +
+    "}catch(e){return false;}})()"
+  ));
+
+  t('触摸后紧随的模拟点击被忽略', await run(
+    "(function(){try{" +
+    "GameUI.clearSel();" +
+    "var rect=document.getElementById('board').getBoundingClientRect();" +
+    "var u=GameUI.state.units.filter(function(x){return x.owner===1;})[0];" +
+    "var c=GameUI.center(u.col,u.row);" +
+    "var first=GameUI.tap(c.x+rect.left,c.y+rect.top,'touch');" +
+    "var second=GameUI.tap(c.x+rect.left,c.y+rect.top,'mouse');" +
+    "GameUI.lastTouch=0;" +
+    "return first===true&&second===false;" +
+    "}catch(e){return false;}})()"
+  ));
+
   t('伤害飘字进入队列', await run(
     "GameUI.popDamage(3,3,'-42','#ff6b6b'); GameUI.floaters.length>0"
   ));

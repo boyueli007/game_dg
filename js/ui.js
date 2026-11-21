@@ -295,15 +295,6 @@ GameUI.drawUnit = function (ctx, u, selected) {
   ctx.fill();
   ctx.restore();
 
-  if (selected) {
-    ctx.save();
-    GameUI.hexPath(ctx, c.x, c.y, s * 0.92);
-    ctx.strokeStyle = '#ffcf4a';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-    ctx.restore();
-  }
-
   ctx.save();
   ctx.translate(c.x, c.y - s * 0.1);
   var sprite = GameData.UNITS[u.type].sprite;
@@ -402,7 +393,7 @@ GameUI.drawOverlay = function (ctx) {
   }
 };
 
-GameUI.render = function () {
+GameUI.render = function (skipHud) {
   var ctx = GameUI.canvas.getContext('2d');
   ctx.clearRect(0, 0, GameUI.canvas.width, GameUI.canvas.height);
   var s = GameUI.state;
@@ -419,13 +410,23 @@ GameUI.render = function () {
   GameUI.drawOverlay(ctx);
   GameUI.drawUnits(ctx);
   GameUI.drawFloaters(ctx);
-  GameUI.updateHud();
+  if (!skipHud) GameUI.updateHud();
+};
+
+GameUI.lastTouch = 0;
+
+GameUI.tap = function (clientX, clientY, kind) {
+  var now = Date.now();
+  if (kind === 'mouse' && now - GameUI.lastTouch < 600) return false;
+  if (kind === 'touch') GameUI.lastTouch = now;
+  GameUI.onCell(GameUI.pickHex(clientX, clientY));
+  return true;
 };
 
 GameUI.floatLoop = function () {
   if (!GameUI.floaters.length) return;
   var ctx = GameUI.canvas.getContext('2d');
-  GameUI.render();
+  GameUI.render(true);
   window.requestAnimationFrame(GameUI.floatLoop);
 };
 
@@ -676,7 +677,8 @@ GameUI.bind = function () {
   var handler = function (ev) {
     ev.preventDefault();
     var t = ev.changedTouches ? ev.changedTouches[0] : ev;
-    GameUI.onCell(GameUI.pickHex(t.clientX, t.clientY));
+    var kind = ev.type.indexOf('touch') === 0 ? 'touch' : 'mouse';
+    GameUI.tap(t.clientX, t.clientY, kind);
   };
   canvas.addEventListener('click', handler);
   canvas.addEventListener('touchstart', handler, { passive: false });
