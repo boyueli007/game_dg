@@ -4,111 +4,177 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#11161d">
+<meta name="theme-color" content="#141a1f">
 <title>欧陆战争 · 手机版</title>
 <link rel="icon" href="data:,">
 <style>
   * { box-sizing: border-box; }
   html, body {
-    margin: 0; height: 100%; overflow: hidden; background: #11161d; color: #e8eef5;
-    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    margin: 0; height: 100%; overflow: hidden;
+    background: #0d1116; color: #e6ddd0;
+    font-family: "Trebuchet MS", "PingFang SC", "Microsoft YaHei", sans-serif;
     user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
   }
   #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
-  #hud {
+
+  #topbar {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 12px; background: #1b2430; font-size: 13px; gap: 8px;
+    padding: 7px 10px;
+    background: linear-gradient(#2b333c, #1b222a);
+    border-bottom: 2px solid #4a5460;
+    box-shadow: 0 2px 6px rgba(0,0,0,.5);
   }
-  .side span { color: #ffd24a; font-weight: 700; }
-  #turnInfo { font-weight: 700; font-size: 14px; }
-  #armyInfo { text-align: center; font-size: 12px; color: #9fb2c6; padding: 4px 0; background: #161f29; }
-  #boardWrap { flex: 1; position: relative; overflow: hidden; background: #0e1319; }
+  .faction { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; }
+  .faction .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .faction.blue .dot { background: #5b8fd6; box-shadow: 0 0 6px #5b8fd6; }
+  .faction.red .dot { background: #d96a6a; box-shadow: 0 0 6px #d96a6a; }
+  .faction .num { color: #ffd24a; font-family: "Courier New", monospace; }
+  .center { text-align: center; line-height: 1.15; }
+  #turnInfo { font-size: 13px; font-weight: 700; letter-spacing: .5px; }
+  .phase { font-size: 10px; padding: 1px 7px; border-radius: 8px; display: inline-block; margin-top: 2px; }
+  .phase.mine { background: #2c5f9e; color: #cfe3ff; }
+  .phase.enemy { background: #7a2a2a; color: #ffd0d0; }
+
+  #mission {
+    display: flex; justify-content: space-between; gap: 8px;
+    padding: 4px 10px; font-size: 11px; color: #9fb0c0;
+    background: #151b21; border-bottom: 1px solid #2b333c;
+  }
+  #missionName { color: #ffd24a; font-weight: 700; }
+
+  #boardWrap { flex: 1; position: relative; overflow: hidden; background: #0a0e12; }
   canvas { display: block; touch-action: none; }
-  #tip { min-height: 20px; padding: 4px 12px; font-size: 12px; color: #9fb2c6; background: #161f29; }
-  #bar {
-    display: flex; gap: 10px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-    background: #1b2430;
+
+  #cardbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px; background: linear-gradient(#232a33, #171d24);
+    border-top: 2px solid #4a5460;
   }
+  #cardArt {
+    width: 52px; height: 52px; flex: 0 0 52px;
+    background: radial-gradient(circle, #39434f, #1b222a);
+    border: 2px solid #5a6673; border-radius: 6px;
+  }
+  .cardinfo { flex: 1; min-width: 0; }
+  #cardName { font-size: 14px; font-weight: 700; }
+  #cardStats { font-size: 11px; color: #9fb0c0; margin-top: 2px; }
+  #cardHp { font-size: 12px; font-weight: 700; margin-top: 2px; }
+
+  #tip {
+    min-height: 18px; padding: 3px 10px; font-size: 11px; color: #8fa0b0;
+    background: #12171c; border-top: 1px solid #2b333c;
+  }
+
+  #bar { display: flex; gap: 8px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); background: #171d24; }
   button {
-    flex: 1; padding: 13px; border-radius: 10px; border: 0; background: #2f6fd0;
-    color: #fff; font-size: 15px; font-weight: 600;
+    flex: 1; padding: 12px; border-radius: 6px; border: 1px solid #6b7785;
+    background: linear-gradient(#3b4552, #262f39);
+    color: #e6ddd0; font-size: 15px; font-weight: 700; letter-spacing: 1px;
+    font-family: inherit;
   }
-  button:disabled { opacity: .45; }
+  button:active { background: linear-gradient(#2b333d, #1b222a); }
+  button:disabled { opacity: .4; }
+  #btnEnd { background: linear-gradient(#7a4a2a, #4f2f1a); border-color: #b0793f; }
   .hidden { display: none !important; }
   #panel {
-    position: fixed; left: 0; right: 0; bottom: 0; background: #161f29; z-index: 20;
-    border-top-left-radius: 14px; border-top-right-radius: 14px;
-    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
-    box-shadow: 0 -6px 20px rgba(0,0,0,.45);
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    background: linear-gradient(#252d36, #141a20);
+    border-top: 2px solid #5a6673;
+    border-top-left-radius: 10px; border-top-right-radius: 10px;
+    padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+    box-shadow: 0 -8px 24px rgba(0,0,0,.65);
   }
-  .panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; }
-  .panel-head button { flex: 0 0 auto; padding: 6px 14px; font-size: 13px; background: #39485a; }
+  .panel-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px; font-size: 14px; letter-spacing: 1px; color: #ffd24a;
+  }
+  .panel-head button { flex: 0 0 auto; padding: 5px 14px; font-size: 12px; }
   .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .card {
     display: flex; flex-direction: column; align-items: flex-start; text-align: left;
-    background: #22303f; padding: 10px; border-radius: 10px; color: #e8eef5;
+    background: linear-gradient(#333d48, #202832);
+    border-radius: 6px; padding: 9px; gap: 2px;
   }
-  .card .nm { font-weight: 700; font-size: 15px; }
-  .card .st { font-size: 11px; color: #9fb2c6; margin-top: 3px; line-height: 1.35; }
-  .card .cost { font-size: 12px; color: #ffd24a; margin-top: 6px; }
-  .card.poor { opacity: .45; }
+  .card .nm { font-size: 15px; font-weight: 700; color: #f0e8da; }
+  .card .st { font-size: 11px; color: #9fb0c0; }
+  .card .st2 { font-size: 10px; color: #7a8a9a; }
+  .card .cost { font-size: 12px; color: #ffd24a; margin-top: 4px; font-family: "Courier New", monospace; }
+  .card.poor { opacity: .42; }
   #over {
-    position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column;
-    gap: 12px; align-items: center; justify-content: center; background: rgba(6,10,14,.88);
+    position: fixed; inset: 0; z-index: 30;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    background: rgba(6,10,14,.9);
   }
-  .over-title { font-size: 34px; font-weight: 800; }
-  .over-sub { font-size: 14px; color: #9fb2c6; }
-  #over button { flex: 0 0 auto; padding: 12px 30px; }
-</style>
+  .over-title { font-size: 34px; font-weight: 800; color: #ffd24a; letter-spacing: 4px; }
+  .over-sub { font-size: 13px; color: #9fb0c0; }
+  #over button { flex: 0 0 auto; padding: 12px 30px; }</style>
 </head>
 <body>
 <div id="app">
-  <header id="hud">
-    <div class="side">蓝方 <span id="gold1">200</span> 金</div>
-    <div id="turnInfo">第 1 回合 · 蓝方行动</div>
-    <div class="side">红方 <span id="gold2">200</span> 金</div>
+  <header id="topbar">
+    <div class="faction blue"><span class="dot"></span>蓝军 <span class="num" id="gold1">200</span></div>
+    <div class="center">
+      <div id="turnInfo">第 1 回合</div>
+      <div id="phase" class="phase mine">我方行动</div>
+    </div>
+    <div class="faction red"><span class="num" id="gold2">200</span> 红军<span class="dot"></span></div>
   </header>
-  <div id="armyInfo">兵力 我 2 : 2 敌</div>
-  <main id="boardWrap"><canvas id="board"></canvas></main>
-  <div id="tip">点击己方部队，再点蓝格移动、红格攻击</div>
+  <div id="mission">
+    <span id="missionName">东部战线</span>
+    <span id="objective">目标 夺取敌方首都</span>
+  </div>
+  <main id="boardWrap"><canvas id="board"></canvas></main>  <div id="cardbar">
+    <canvas id="cardArt" width="104" height="104"></canvas>
+    <div class="cardinfo">
+      <div id="cardName">未选择部队</div>
+      <div id="cardStats">点击己方部队查看详情</div>
+      <div id="cardHp"></div>
+    </div>
+  </div>
+  <div id="tip">点击己方部队开始行动</div>
   <footer id="bar">
-    <button id="btnBuy">招募</button>
+    <button id="btnBuy">出 兵</button>
     <button id="btnEnd">结束回合</button>
   </footer>
 </div>
+
 <div id="panel" class="hidden">
   <div class="panel-head">
-    <strong>招募部队</strong>
+    <strong>兵工厂</strong>
     <button id="btnClose">关闭</button>
   </div>
   <div class="cards">
     <button class="card" data-type="inf">
       <span class="nm">步兵</span>
-      <span class="st">攻 42 · 防 30 · 移动 2 · 可占领</span>
+      <span class="st">攻 42 · 防 30 · 移动 2</span>
+      <span class="st2">可占领据点</span>
       <span class="cost">60 金</span>
     </button>
     <button class="card" data-type="cav">
       <span class="nm">装甲车</span>
-      <span class="st">攻 55 · 防 35 · 移动 4 · 可占领</span>
+      <span class="st">攻 55 · 防 35 · 移动 4</span>
+      <span class="st2">机动突进</span>
       <span class="cost">90 金</span>
     </button>
     <button class="card" data-type="tank">
       <span class="nm">坦克</span>
-      <span class="st">攻 70 · 防 45 · 移动 3 · 可占领</span>
+      <span class="st">攻 70 · 防 45 · 移动 3</span>
+      <span class="st2">正面攻坚</span>
       <span class="cost">120 金</span>
     </button>
     <button class="card" data-type="arty">
       <span class="nm">火炮</span>
-      <span class="st">攻 85 · 防 20 · 射程 2 · 不可占领</span>
+      <span class="st">攻 85 · 防 20 · 射程 2</span>
+      <span class="st2">远程支援 · 不可占领</span>
       <span class="cost">140 金</span>
     </button>
   </div>
 </div>
 
 <div id="over" class="hidden">
-  <div class="over-title">胜利</div>
-  <div class="over-sub">你占领了敌方首都</div>
-  <button id="btnRestart">再来一局</button>
+  <div class="over-title">战役胜利</div>
+  <div class="over-sub">敌方首都已被攻克</div>
+  <button id="btnRestart">再战一局</button>
 </div>
 
 <script src="js/data.js"></script>
